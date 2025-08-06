@@ -1,6 +1,6 @@
-import { title } from 'process';
+
 import './App.scss';
-import React, { useId, useImperativeHandle, useState } from 'react';
+import React, { useState } from 'react';
 
 
 import usersFromServer from './api/users';
@@ -30,7 +30,7 @@ export const App = () => {
   const [titleError, setTitleError] = useState('');
   const [userError, setUserError] = useState('');
   const [completed, setCompleted] = useState(false);
-  const handleUserIdChange = (event) => {
+  const handleUserIdChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setUserId(event.target.value);
   };
 
@@ -40,27 +40,39 @@ export const App = () => {
 
   
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
+    setTitleError('');
+    setUserError('');
+
+    let hasError = false;
     if (!title) {
       setTitleError('Please enter a title');
+      hasError = true;
     }
     if (!userId) {
-        setUserError('Please enter a user');
+      setUserError('Please enter a user');
+      hasError = true;
+    } else if (!foundUserCorrected) {
+      setUserError('Selected user not found');
+      hasError = true;
     }
+
     if (title && userId) {
       const newTodo = {
-      id: maxId,
+      id: maxId + 1,
       title: title,
       userId: Number(userId),
       completed: false,
-      user: foundUserCorrected,
-};
+      user: foundUserCorrected as User,
+      };
+
       setTodos((prevTodos) => [...prevTodos, newTodo]);
+      setTitle('');
+      setUserId('');
+      setCompleted(false);
     }
-    setTitle(''),
-    setUserId(''),
-    setCompleted(false)
   }
 
 const isFulled = title.trim() !== '' && userId !== '';
@@ -82,15 +94,18 @@ const isFulled = title.trim() !== '' && userId !== '';
             }}
           />
           {titleError && <span className="error">{titleError}</span>}
-          {userError && <span className="error">{userError}</span>}
 
         </div>
 
         <div className="field">
           <select data-cy="userSelect"
-             value={userId}
-             onChange={handleUserIdChange}>
-            <option value="" disabled selected>
+            value={userId}
+            onChange={event => {
+              setUserId(event.target.value);
+              setUserError('');
+            }}
+          >
+            <option value="">
               Choose a user
             </option>
             {usersFromServer.map((user) => (
@@ -100,7 +115,7 @@ const isFulled = title.trim() !== '' && userId !== '';
            ))}
           </select>
 
-          <span className="error">Please choose a user</span>
+          {userError && <span className="error">{userError}</span>}
         </div>
 
         <button
